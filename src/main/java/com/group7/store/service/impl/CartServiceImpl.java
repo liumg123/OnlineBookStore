@@ -11,7 +11,7 @@ import java.sql.Timestamp;
 import java.util.List;
 
 @Service("firstCart")
-public class CartServiceImp implements CartService {
+public class CartServiceImpl implements CartService {
     @Autowired
     CartMapper cartMapper;
 
@@ -22,8 +22,7 @@ public class CartServiceImp implements CartService {
         cart.setAddTime(new Timestamp(System.currentTimeMillis()));
         cart.setId(id);
         cart.setNum(num);
-        int result = cartMapper.addProduct(cart);
-        return result;
+        return cartMapper.addProduct(cart);
     }
 
     @Override
@@ -33,8 +32,7 @@ public class CartServiceImp implements CartService {
 
     @Override
     public int deleteProduct(String account, int id) {
-        int result = cartMapper.deleteProduct(account, id);
-        return result;
+        return cartMapper.deleteProduct(account, id);
     }
 
     @Override
@@ -48,8 +46,7 @@ public class CartServiceImp implements CartService {
         cart.setNum(num);
         cart.setId(id);
         cart.setAccount(account);
-        int result = cartMapper.modifyProductNum(cart);
-        return result;
+        return cartMapper.modifyProductNum(cart);
     }
 
 

@@ -22,6 +22,8 @@ public interface BookService {
 
     int modifyBookNewPro(int id, boolean newProduct);//修改图书是否为新品
 
+    List<Book> getSearchBookList(String searchParam);//按照书名、作者、ISBN、出版社获取图书
+
     int modifyBookStock(int id, int stockNum);//减库存stockNum
 
     int deleteBook(int id);
@@ -42,7 +44,7 @@ public interface BookService {
 
     Book getBook(int id);//获取图书的所有
 
-    Book getBookDetail(String ISBN);//获得图书用于后台页表展示的信息(除去图书详情页和部分图书相册)
+    Book getBookDetail(String iSBN);//获得图书用于后台页表展示的信息(除去图书详情页和部分图书相册)
 
     int getPublishBookNum(String publishName);//得到某一出版社的图书的数量
 

@@ -10,27 +10,24 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service("firstAddress")
-public class AddressServiceImp implements AddressService {
+public class AddressServiceImpl implements AddressService {
 
     @Autowired
     AddressMapper addressMapper;
 
     @Override
     public int addAddress(Address address) {
-        int result = addressMapper.addAddress(address);
-        return result;
+        return addressMapper.addAddress(address);
     }
 
     @Override
     public int deleteAddress(int id) {
-        int result = addressMapper.deleteAddress(id);
-        return result;
+        return addressMapper.deleteAddress(id);
     }
 
     @Override
     public int modifyAddress(Address address) {
-        int result = addressMapper.modifyAddress(address);
-        return result;
+        return addressMapper.modifyAddress(address);
     }
 
     @Override
@@ -40,7 +37,6 @@ public class AddressServiceImp implements AddressService {
 
     @Override
     public int setAddressOff(int id) {
-        int result = addressMapper.setAddressOff(id);
-        return result;
+        return addressMapper.setAddressOff(id);
     }
 }

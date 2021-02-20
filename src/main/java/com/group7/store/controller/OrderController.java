@@ -9,13 +9,14 @@ import com.group7.store.service.BookService;
 import com.group7.store.service.CartService;
 import com.group7.store.service.OrderService;
 import com.group7.store.util.ResultUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 
@@ -38,6 +39,7 @@ public class OrderController {
     @Autowired
     @Qualifier("orderService")
     OrderService orderService;
+    private static final Logger log = LoggerFactory.getLogger(OrderController.class);
 
     /**
      * 初始化订单，得到用户购买的图书集合，得到费用信息，并返回前端费用信息和图书集合
@@ -51,18 +53,20 @@ public class OrderController {
                                          @RequestParam(value = "from") int from,
                                          @RequestParam(value = "account") String account) {
         for (int i = 0; i < ids.length; i++) {
-            System.out.println("===ids[i]========" + ids[i] + "==============");
+            String idLog = "===ids[i]========" + ids[i] + "==============";
+            log.info(idLog);
         }
         Map<String, Object> map = new HashMap<>();
         Expense expense = new Expense();
         OrderInitDto orderInitDto = new OrderInitDto();
-        List<OrderBookDto> batchBookList = new ArrayList<>();
+        List<OrderBookDto> batchBookList;
         if (from == 1) {//从购物车点击提交的
             batchBookList = bookService.getBatchBookList(ids);
             for (int i = 0; i < batchBookList.size(); i++) {
                 int bookCount = cartService.getBookCount(account, batchBookList.get(i).getId());
                 batchBookList.get(i).setNum(bookCount);
-                System.out.println("====batchBookList.get(i).getNum():======" + batchBookList.get(i).getNum() + "======");
+                String bookName = String.format("====batchBookList.get(i).getNum():======%s======", batchBookList.get(i).getNum());
+                log.info(bookName);
             }
             cartService.delBatchProduct(account, ids);//删除购物车中的图书
         } else {//从详情页点击提交的
@@ -89,7 +93,8 @@ public class OrderController {
         orderInitDto.setBookList(batchBookList);
         orderInitDto.setExpense(expense);
         orderInitDto.setAccount(account);
-        System.out.println("============account:===========" + account + "============");
+        String accountlog = "============account:===========" + account + "============";
+        log.info(accountlog);
         map.put("orderInitDto", orderInitDto);
         return ResultUtil.resultSuccess(map);
     }
@@ -119,7 +124,7 @@ public class OrderController {
     @GetMapping("/getAdminOrderList")
     public Map<String, Object> egtOrderList(@RequestParam("page") int page,
                                             @RequestParam("pageSize") int pageSize) {
-        System.out.println("=========请求到达获取订单接口===========");
+        log.info("=========请求到达获取订单接口===========");
         List<OrderDto> orderDtoList = orderService.orderDtoList("", page, pageSize, "", false);
         Map<String, Object> map = new HashMap<>();
         map.put("orderDtoList", orderDtoList);
@@ -141,7 +146,8 @@ public class OrderController {
         for (int i = 0; i < orderDetailDtoList.size(); i++) {
             String img = bookService.getBookCover(orderDetailDtoList.get(i).getBook().getisbn());
             orderDetailDtoList.get(i).getBook().setCoverImg(img);
-            System.out.println("=======orderDetailDtoList.size():=====" + orderDetailDtoList.size() + "============");
+            String orderDetailDtoListLog = "=======orderDetailDtoList.size():=====" + orderDetailDtoList.size() + "============";
+            log.info(orderDetailDtoListLog);
         }
         orderDto.setOrderDetailDtoList(orderDetailDtoList);
         Map<String, Object> map = new HashMap<>();
@@ -158,7 +164,8 @@ public class OrderController {
      */
     @GetMapping("/delOrder")
     public Map<String, Object> delOrder(@RequestParam("id") int id) {
-        System.out.println("=============" + id + "=================");
+        String idLog = "=============" + id + "=================";
+        log.info(idLog);
         if (orderService.delOrder(id) > 0) {
             return ResultUtil.resultCode(200, "删除订单成功");
         }
@@ -169,7 +176,8 @@ public class OrderController {
     public Map<String, Object> delOrdr(@RequestParam("id") int id,
                                        @RequestParam("logisticsCompany") int logisticsCompany,
                                        @RequestParam("logisticsNum") String logisticsNum) {
-        System.out.println("=============" + id + "=================");
+        String idLog = "=============" + id + "=================";
+        log.info(idLog);
         if (orderService.deliverBook(id, logisticsCompany, logisticsNum) > 0) {
             return ResultUtil.resultCode(200, "发货成功");
         }
@@ -182,17 +190,20 @@ public class OrderController {
                                                 @RequestParam("pageSize") int pageSize,
                                                 @RequestParam("orderStatus") String orderStatus,
                                                 @RequestParam("beUserDelete") boolean beUserDelete) {
-        System.out.println("=========orderStatus,beUserDelete===========:" + orderStatus + " " + beUserDelete + "=========");
+        String orderStatusAndbeUserDeleteLog = "=========orderStatus,beUserDelete===========:" + orderStatus + " " + beUserDelete + "=========";
+        log.info(orderStatusAndbeUserDeleteLog);
         List<OrderDto> orderDtoList = orderService.orderDtoList(account, page, pageSize, orderStatus, beUserDelete);
         for (int i = 0; i < orderDtoList.size(); i++) {
             List<OrderDetailDto> orderDetailDtoList = orderService.findOrderDetailDtoList(orderDtoList.get(i).getOrderId());
             List<String> coverImgList = new ArrayList<>();
             for (int j = 0; j < orderDetailDtoList.size() && j < 5; j++) {
-                System.out.println("======orderDetailDtoList.get(j)====:" + orderDetailDtoList.get(j) + "=========");
+                String orderDetailDtoListLog = "======orderDetailDtoList.get(j)====:" + orderDetailDtoList.get(j) + "=========";
+                log.info(orderDetailDtoListLog);
                 String img = bookService.getBookCover(orderDetailDtoList.get(j).getBook().getisbn());
                 coverImgList.add(img);
             }
-            System.out.println("=====coverImgList.size()=====" + coverImgList.size() + "===================");
+            String coverImgListLog = "=====coverImgList.size()=====" + coverImgList.size() + "===================";
+            log.info(coverImgListLog);
             orderDtoList.get(i).setCoverImgList(coverImgList);
         }
         Map<String, Object> map = new HashMap<>();
@@ -212,7 +223,8 @@ public class OrderController {
     @GetMapping("/modifyOrderStatus")
     public Map<String, Object> modifyOrderStatus(@RequestParam("id") int id,
                                                  @RequestParam("orderStatus") String orderStatus) {
-        System.out.println("========确认收货====" + id);
+        String idLog = "========确认收货====" + id;
+        log.info(idLog);
         if (orderService.modifyOrderStatus(id, orderStatus) > 0) {
             return ResultUtil.resultCode(200, "操作成功");
         }
@@ -227,21 +239,9 @@ public class OrderController {
      * @param endDate
      * @return
      */
-    @RequestMapping(value = "/order/date", method = RequestMethod.GET)
+    @GetMapping("/order/date")
     public Map<String, Object> dateFilter(@RequestParam("beginDate") String beginDate,
                                           @RequestParam("endDate") String endDate) throws ParseException {
-        // 将结束日期+1 便于sql操作
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-        Date date0 = format.parse(beginDate);
-        Date date1 = format.parse(endDate);
-//        try {
-////            Calendar calendar = Calendar.getInstance();
-////            calendar.setTime(date1);
-////            calendar.add(Calendar.DAY_OF_MONTH, 1);
-////            date1 = calendar.getTime();
-////        } catch (Exception e){
-////            System.out.println(e);
-////        }
         Map<String, Object> map = new HashMap<>();
         List<OrderStatistic> orderStatistic = orderService.getOrderStatistic(beginDate, endDate);
         map.put("orderStatistic", orderStatistic);

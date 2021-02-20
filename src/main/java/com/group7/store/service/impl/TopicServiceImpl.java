@@ -13,27 +13,24 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service("firstTopic")
-public class TopicServiceImp implements TopicService {
+public class TopicServiceImpl implements TopicService {
 
     @Autowired
     TopicMapper topicMapper;
 
     @Override
     public int addBookTopic(BookTopic bookTopic) {
-        int result = topicMapper.addBookTopic(bookTopic);
-        return result;
+        return topicMapper.addBookTopic(bookTopic);
     }
 
     @Override
     public int delBookTopic(int id) {
-        int result = topicMapper.delBookTopic(id);
-        return result;
+        return topicMapper.delBookTopic(id);
     }
 
     @Override
     public int modifyBookTopic(BookTopic bookTopic) {
-        int result = topicMapper.modifyBookTopic(bookTopic);
-        return result;
+        return topicMapper.modifyBookTopic(bookTopic);
     }
 
     @Override

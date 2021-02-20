@@ -5,6 +5,8 @@ import com.group7.store.entity.book.Publish;
 import com.group7.store.service.BookService;
 import com.group7.store.service.PublishService;
 import com.group7.store.util.ResultUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
@@ -17,6 +19,7 @@ import java.util.Map;
 @Controller
 @ResponseBody
 public class PublishController {
+    private static final Logger log = LoggerFactory.getLogger(PublishController.class);
 
     @Autowired
     @Qualifier("firstPublish")
@@ -33,13 +36,22 @@ public class PublishController {
      * @param publish
      * @return
      */
-    @PostMapping("/admin/addPublish")
+    @PostMapping("/addPublish")
     public Map<String, Object> addPublish(@RequestBody Publish publish) {
         Map<String, Object> map = new HashMap<>();
-        System.out.println(publish.isShowPublish());
-        System.out.println(publish.toString());
-        if (publishService.addPublish(publish) > 0) {
-            return ResultUtil.resultSuccess(map);
+        log.info("publish.isShowPublish()");
+        log.info("publish.toString()");
+
+
+        try {
+            if (publishService.addPublish(publish) > 0) {
+                return ResultUtil.resultSuccess(map);
+            }
+        }catch (Exception e) {
+            if(e.getMessage().contains("Duplicate")){
+                map.put("message","出版社的名字不能重复");
+                return ResultUtil.resultError(map);
+            }
         }
         return ResultUtil.resultError(map);
     }
@@ -88,7 +100,7 @@ public class PublishController {
      * @return
      */
     @GetMapping("/getEditPublish")
-    Map<String, Object> getEditPublish(@RequestParam int id) {
+    public Map<String, Object> getEditPublish(@RequestParam int id) {
         Map<String, Object> map = new HashMap<>();
         Publish publish = publishService.getPublishById(id);
         map.put("publish", publish);
@@ -104,10 +116,9 @@ public class PublishController {
      * @return
      */
     @PostMapping("/modifyPublish")
-    Map<String, Object> modifyPublish(@RequestBody Publish publish) {
+    public Map<String, Object> modifyPublish(@RequestBody Publish publish) {
         Map<String, Object> map = new HashMap<>();
         if (publishService.modifyPublish(publish) > 0) {
-            System.out.println("修改成功");
             return ResultUtil.resultSuccess(map);
         }
         return ResultUtil.resultError(map);
@@ -121,9 +132,9 @@ public class PublishController {
      * @return
      */
     @GetMapping("/modifyShowPublish")
-    Map<String, Object> modifyIsShow(@RequestParam int id) {
+    public Map<String, Object> modifyIsShow(@RequestParam int id) {
         if (publishService.modifyIsShow(id) > 0) {
-            System.out.println("修改成功");
+            log.info("修改成功");
             return ResultUtil.resultCode(200, "修改成功！");
         }
         return ResultUtil.resultCode(500, "修改失败");
@@ -136,9 +147,9 @@ public class PublishController {
      * @return
      */
     @GetMapping("/delPublish")
-    Map<String, Object> delPublish(@RequestParam int id) {
+    public Map<String, Object> delPublish(@RequestParam int id) {
         if (publishService.deletePublish(id) > 0) {
-            System.out.println("删除成功");
+            log.info("删除成功");
             return ResultUtil.resultCode(200, "删除成功");
         }
         return ResultUtil.resultCode(500, "删除失败");

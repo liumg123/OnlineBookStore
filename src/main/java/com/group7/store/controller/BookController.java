@@ -7,8 +7,9 @@ import com.group7.store.entity.book.Recommend;
 import com.group7.store.entity.dto.SortBookRes;
 import com.group7.store.service.BookService;
 import com.group7.store.service.SortService;
-import com.group7.store.util.FileUtil;
 import com.group7.store.util.ResultUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
@@ -21,6 +22,8 @@ import java.util.*;
 @ResponseBody
 @RequestMapping(value = "/book")
 public class BookController {
+    private static final Logger log = LoggerFactory.getLogger(BookController.class);
+    private static final String BOOK_LIST = "bookList";
 
     @Autowired
     @Qualifier("firstVersion")
@@ -28,8 +31,20 @@ public class BookController {
     @Autowired
     @Qualifier("firstSort")
     SortService sortService;
-    private String basePath = "D://ITsoftware//IDEA//data//Vue//book_01//";
-    private String bookPath = "static//image//book//";
+
+    @GetMapping("/searchBook")
+    public Map<String, Object> searchBook(@RequestParam(value = "searchParam") String searchParam) {
+        Map<String, Object> map = new HashMap<>();
+        List<Book> searchBookList = bookService.getSearchBookList(searchParam);
+        if (searchBookList.isEmpty()) {
+            map.put("code", 500);
+            map.put("message", "未查到相关数据，请检查输入是否正确！");
+        } else {
+            map.put("code",200);
+            map.put("booklist", searchBookList);
+        }
+        return map;
+    }
 
     /**
      * 添加图书
@@ -38,10 +53,12 @@ public class BookController {
      * @return
      */
     @PostMapping("/addBook")
+
     public Map<String, Object> addBook(@RequestBody Book book) {
         bookService.addBook(book);
         int bookId = bookService.getBookId(book.getisbn());
-        System.out.println("bookId:" + bookId);
+        String info = "bookId:" + bookId;
+        log.info(info);
         boolean newProduct = book.isNewProduct();
         Recommend r = new Recommend();
         Date date = new Date();
@@ -57,10 +74,8 @@ public class BookController {
         }
         int[] bookSort = book.getBookSort();
         if (bookSort.length == 1) {
-            System.out.println(bookSort[0]);
             bookService.addBookToSort(bookSort[0], bookId);
         } else {
-            System.out.println(bookSort[1]);
             bookService.addBookToSort(bookSort[1], bookId);
         }
         return ResultUtil.resultCode(200, "上传图书成功");
@@ -74,8 +89,6 @@ public class BookController {
      */
     @PostMapping("/modifyBook")
     public Map<String, Object> modifyBook(@RequestBody Book book) {
-        System.out.println("修改图书起作用了");
-        System.out.println(book.toString());
         int bookId = book.getId();
         String oldIsbn = bookService.getBookIsbn(bookId);
         bookService.modifyBookImgList(oldIsbn, book.getisbn());
@@ -101,7 +114,7 @@ public class BookController {
         if (!recommend && isExistInRec == 1) {
             bookService.deleteFromRecommend(bookId);
         }
-        int bookSort[] = book.getBookSort();
+        int[] bookSort = book.getBookSort();
         BookSort bookSort1 = bookService.getBookSort(bookId);
         if (bookSort.length == 1 && bookSort1.getId() != bookSort[0]) {
             bookService.modifyBookSort(bookSort[0], bookId);
@@ -122,8 +135,6 @@ public class BookController {
     @GetMapping("/modifyPut")
     public Map<String, Object> handlePut(@RequestParam(value = "bookId") int bookId,
                                          @RequestParam(value = "put") boolean put) {
-        System.out.println(bookId);
-        System.out.println(put);
         bookService.modifyBookPut(bookId, put);
         return ResultUtil.resultCode(200, "修改成功");
     }
@@ -165,10 +176,8 @@ public class BookController {
     public Map<String, Object> handleNew(@RequestParam(value = "bookId") int bookId,
                                          @RequestParam(value = "newProduct") boolean newProduct) {
         int isExistInNew = bookService.hasExistInNew(bookId);
-        System.out.println("isExistInNew:" + isExistInNew);
-        System.out.println("newProduct:" + newProduct);
         if (isExistInNew == 1 && !newProduct) {
-            System.out.println("删除新品推荐！");
+            log.info("成功删除新品推荐！");
             bookService.deleteFromNewProduct(bookId);
         }
         if (isExistInNew == 0 && newProduct) {
@@ -193,15 +202,15 @@ public class BookController {
     @GetMapping(value = "/getBookList")
     public Map<String, Object> getBook(@RequestParam(value = "page") int page,
                                        @RequestParam(value = "pageSize") int pageSize) {
-        System.out.println("=========================按页得到图书的集合========================");
+        log.info("=========================按页得到图书的集合========================");
         Map<String, Object> map = new HashMap<>();
         List<Book> bookList = bookService.getBooksByPage(page, pageSize);
         for (int i = 0; i < bookList.size(); i++) {
             String img = bookService.getBookCover(bookList.get(i).getisbn());
-            System.out.println("=======设置了图书的封面图片========");
+            log.info("=======设置了图书的封面图片========");
             bookList.get(i).setCoverImg(img);
         }
-        map.put("bookList", bookList);
+        map.put(BOOK_LIST, bookList);
         int total = bookService.getBookCount();
         map.put("total", total);
         return ResultUtil.resultSuccess(map);
@@ -215,8 +224,13 @@ public class BookController {
      */
     @GetMapping(value = "/getSortBookList")
     public Map<String, Object> getSortBookList(@RequestParam(value = "sortId") int sortId) {
-        BookSort bookSort = sortService.getBookSortById(sortId);
-        List<Book> upperBookList = bookService.getBooksByFirst(bookSort.getSortName(), 1, 14);
+        BookSort bookSort = null;
+        bookSort = sortService.getBookSortById(sortId);
+        if (bookSort == null) {
+            return ResultUtil.resultCode(500,"未找到该分类！");
+        }
+        String sortName = bookSort.getSortName();
+        List<Book> upperBookList = bookService.getBooksByFirst(sortName, 1, 14);
         for (int i = 0; i < upperBookList.size(); i++) {
             String img = bookService.getBookCover(upperBookList.get(i).getisbn());
             upperBookList.get(i).setCoverImg(img);
@@ -259,7 +273,7 @@ public class BookController {
                                                      @RequestParam(value = "pageSize") int pageSize) {
         BookSort bookSort = sortService.getBookSortById(sortId);
         int total = 0;
-        List<Book> bookList = new ArrayList<>();
+        List<Book> bookList ;
         if (bookSort.getUpperName().equals("无")) {
             //说明是一级分类
             bookList = bookService.getBooksByFirst(bookSort.getSortName(), page, pageSize);
@@ -275,7 +289,7 @@ public class BookController {
         }
         Map<String, Object> map = new HashMap<>();
         map.put("total", total);
-        map.put("bookList", bookList);
+        map.put(BOOK_LIST, bookList);
         return ResultUtil.resultSuccess(map);
     }
 
@@ -288,7 +302,7 @@ public class BookController {
     @GetMapping(value = "/getRecBookList")
     public Map<String, Object> getRecBook(@RequestParam(value = "sort") String sort) {
         Map<String, Object> map = new HashMap<>();
-        List<Book> bookList = new ArrayList<>();
+        List<Book> bookList ;
         switch (sort) {
             case "recommend":
                 bookList = bookService.getRecommendsByPage(1, 14);
@@ -307,7 +321,7 @@ public class BookController {
             String img = bookService.getBookCover(bookList.get(i).getisbn());
             bookList.get(i).setCoverImg(img);
         }
-        map.put("bookList", bookList);
+        map.put(BOOK_LIST, bookList);
         return ResultUtil.resultSuccess(map);
     }
 
@@ -318,14 +332,12 @@ public class BookController {
      * @return
      */
     @GetMapping("/getBook")
-    Map<String, Object> getBook(@RequestParam int id) {
-        System.out.println("==========查询某本图书的数据集合==============");
+    public Map<String, Object> getBook(@RequestParam int id) {
+        log.info("==========查询某本图书的数据集合==============");
         Map<String, Object> map = new HashMap<>();
-        System.out.println("id:" + id);
         Book book = bookService.getBook(id);
         List<String> img = bookService.getBookImgSrcList(book.getisbn());
         book.setImgSrc(img);
-        System.out.println("=======图书的封面：=========" + book.getImgSrc() + "=========");
         BookSort bookSort = bookService.getBookSort(id);
         int upperId = 0;
         int childId = 0;
@@ -339,7 +351,6 @@ public class BookController {
             childId = bookSort.getId();
             map.put("upperId", childId);
         }
-//        System.out.println("获取出来的bookSort:"+bookSort);
         map.put("book", book);
         return ResultUtil.resultSuccess(map);
     }
@@ -366,21 +377,8 @@ public class BookController {
      */
     @GetMapping("/delBook")
     public Map<String, Object> delBook(@RequestParam(value = "bookId") int bookId) {
-        System.out.println("删除图书起作用");
-        System.out.println("isbn:" + bookId);
         Book book = bookService.getBook(bookId);
-        List<String> imgPaths = bookService.getBookImgSrcList(book.getisbn());
-        for (int i = 0; i < imgPaths.size(); i++) {
-            String path = basePath + imgPaths.get(i);
-            imgPaths.set(i, path);
-        }
         if (bookService.deleteBook(bookId) > 0 && bookService.deleteBookImgOfOne(book.getisbn()) > 0) {
-            System.out.println("删除图片大于0");
-
-            for (int i = 0; i < imgPaths.size(); i++) {
-                System.out.println(imgPaths.get(i));
-            }
-            FileUtil.delImg(imgPaths);
             return ResultUtil.resultCode(200, "删除图书成功");
         }
         return ResultUtil.resultCode(500, "删除图书失败");
@@ -396,9 +394,7 @@ public class BookController {
     @PostMapping("/batchDel")
     public Map<String, Object> batchBook(@RequestParam(value = "ids") int[] ids,
                                          @RequestParam(value = "operator") String operator) {
-        System.out.println("说明已经请求到了");
-        System.out.println(Arrays.toString(ids));
-        System.out.println(operator);
+        log.info("说明已经请求到了");
         switch (operator) {
             case "del":
                 bookService.batchDelBook(ids);

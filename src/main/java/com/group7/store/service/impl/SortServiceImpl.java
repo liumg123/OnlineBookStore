@@ -10,39 +10,34 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service("firstSort")
-public class SortServiceImp implements SortService {
+public class SortServiceImpl implements SortService {
 
     @Autowired
     SortMapper sortMapper;
 
     @Override
     public int addSort(BookSort bookSort) {
-        int result = sortMapper.addSort(bookSort);
-        return result;
+        return sortMapper.addSort(bookSort);
     }
 
     @Override
     public int deleteSort(String upperName, String sortName) {
-        int result = sortMapper.deleteSort(upperName, sortName);
-        return result;
+        return sortMapper.deleteSort(upperName, sortName);
     }
 
     @Override
     public int deleteFirSort(String sortName) {
-        int result = sortMapper.deleteFirSort(sortName);
-        return result;
+        return sortMapper.deleteFirSort(sortName);
     }
 
     @Override
     public int modifySort(BookSort bookSort) {
-        int result = sortMapper.modifySort(bookSort);
-        return result;
+        return sortMapper.modifySort(bookSort);
     }
 
     @Override
     public int modifySortUpperName(String oldUpperName, String newUpperName) {
-        int result = sortMapper.modifySortUpperName(oldUpperName, newUpperName);
-        return result;
+        return sortMapper.modifySortUpperName(oldUpperName, newUpperName);
     }
 
     @Override

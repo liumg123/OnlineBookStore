@@ -14,7 +14,7 @@ import java.util.List;
  * @Date: 2021/1/18
  */
 @Service("firstUser")
-public class UserServiceImp implements UserService {
+public class UserServiceImpl implements UserService {
     @Autowired
     UserMapper userMapper;
 
@@ -23,8 +23,7 @@ public class UserServiceImp implements UserService {
 
     @Override
     public int addUser(User user) {
-        int result = userMapper.addUser(user);
-        return result;
+        return userMapper.addUser(user);
     }
 
     @Override
@@ -35,8 +34,7 @@ public class UserServiceImp implements UserService {
 
     @Override
     public List<User> getUsersByPage(int page, int pageSize) {
-        page = (page - 1) * pageSize;
-        return userMapper.getUsersByPage(page, pageSize);
+        return userMapper.getUsersByPage((page - 1) * pageSize, pageSize);
     }
 
     @Override
@@ -55,17 +53,14 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
-    public int updateImg(String account, String ImgUrl) {
-        return userMapper.updateImg(account, ImgUrl);
+    public int updateImg(String account, String imgUrl) {
+        return userMapper.updateImg(account, imgUrl);
     }
 
     @Override
     public boolean isExist(String account, String pwd) {
         User user = userMapper.getUser(account);
-        if (pwd.equals(user.getPassword())) {
-            return true;
-        }
-        return false;
+        return pwd.equals(user.getPassword());
     }
 
 }
